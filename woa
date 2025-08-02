@@ -1,0 +1,108 @@
+-- Carrega biblioteca externa
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
+local Window = Library:NewWindow("Script")
+local Tab = Window:NewSection("Credits: TGMANKASKE")
+
+-- Toggle: WalkSpeed Infinito
+local walkSpeedActive = false
+Tab:CreateToggle("Inf WalkSpeed", function(state)
+	walkSpeedActive = state
+
+	if walkSpeedActive then
+		task.spawn(function()
+			while walkSpeedActive do
+				local args = {
+					"WalkingSpeedGain",
+					9999999999
+				}
+				local success, err = pcall(function()
+					game:GetService("ReplicatedStorage"):WaitForChild("SpeedBoost"):FireServer(unpack(args))
+				end)
+
+				if not success then
+					warn("Erro ao enviar WalkSpeedGain:", err)
+				end
+				task.wait(0.3)
+			end
+		end)
+	end
+end)
+
+-- Toggle: Auto Finish (com teleport em sequência + plataforma fixa)
+local autoFinishActive = false
+local platform = nil
+
+Tab:CreateToggle("Auto Finish", function(state)
+	autoFinishActive = state
+
+	if not autoFinishActive then
+		-- Desativa e remove plataforma, se existir
+		if platform and platform.Parent then
+			platform:Destroy()
+			platform = nil
+		end
+		return
+	end
+
+	local Players = game:GetService("Players")
+	local Workspace = game:GetService("Workspace")
+	local RunService = game:GetService("RunService")
+	local player = Players.LocalPlayer
+
+	task.spawn(function()
+		while autoFinishActive do
+			local character = player.Character or player.CharacterAdded:Wait()
+			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+			if not humanoidRootPart then warn("HRP não encontrado.") return end
+
+			-- Cria uma plataforma (se ainda não existir)
+			if not platform then
+				platform = Instance.new("Part")
+				platform.Name = "FloatingPlatform"
+				platform.Size = Vector3.new(10, 1, 10)
+				platform.Anchored = true
+				platform.CanCollide = true
+				platform.Transparency = 1
+				platform.Parent = Workspace
+			end
+
+			-- Função para manter a plataforma abaixo do jogador
+			local function positionPlatform()
+				if humanoidRootPart and platform then
+					platform.CFrame = CFrame.new(humanoidRootPart.Position - Vector3.new(0, 3, 0))
+				end
+			end
+
+			-- Lista de posições de checkpoint
+			local teleportPoints = {
+				Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp2"),
+				Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp3"),
+				Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp4"),
+				Workspace:FindFirstChild("cp5"),
+				Workspace:FindFirstChild("cp6"),
+				Workspace:FindFirstChild("cp7"),
+				Workspace:FindFirstChild("cp8"),
+				Workspace:FindFirstChild("cp9"),
+				Vector3.new(5732, 1061, 89) -- última posição
+			}
+
+			for _, point in ipairs(teleportPoints) do
+				if not autoFinishActive then break end -- sair se toggle for desligado
+				local targetPos = typeof(point) == "Instance" and point.Position or point
+				humanoidRootPart.CFrame = CFrame.new(targetPos)
+				positionPlatform()
+				print("Teleportado para:", targetPos)
+				task.wait(1.6)
+			end
+
+			-- Espera antes de reiniciar o loop
+			task.wait(0.5)
+		end
+
+		-- Se sair do loop, destruir plataforma
+		if platform and platform.Parent then
+			platform:Destroy()
+			platform = nil
+		end
+	end)
+end)
