@@ -18,7 +18,11 @@ end
 end)
  
  
-Tab:CreateButton("Instant Teleport (with floating platform)", function()
+Tab:CreateToggle("Auto Finish", function(no)
+_G.GetWins = no
+while _G.GetWins== true do
+    wait(0.3)
+
     local Players = game:GetService("Players")
     local Workspace = game:GetService("Workspace")
 
@@ -75,4 +79,5 @@ Tab:CreateButton("Instant Teleport (with floating platform)", function()
         platform:Destroy()
         print("Teleportação concluída. Plataforma removida.")
     end)
+end
 end)
