@@ -18,19 +18,24 @@ end
 end)
  
  
-Tab:CreateButton("Instant Finish", function()
+Tab:CreateButton("Instant Teleport", function()
     local Players = game:GetService("Players")
     local Workspace = game:GetService("Workspace")
     local RunService = game:GetService("RunService")
 
     local player = Players.LocalPlayer
-    if not player then warn("Jogador local não encontrado!") return end
+    if not player then
+        warn("Jogador local não encontrado!")
+        return
+    end
 
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
 
-    -- Ativa noclip
-    RunService.Stepped:Connect(function()
+    -- Ativa noclip durante o teleporte
+    local noclipConnection
+    noclipConnection = RunService.Stepped:Connect(function()
         for _, part in ipairs(character:GetDescendants()) do
             if part:IsA("BasePart") then
                 part.CanCollide = false
@@ -38,7 +43,12 @@ Tab:CreateButton("Instant Finish", function()
         end
     end)
 
-    -- Lista de posições (patches e coordenadas)
+    -- Congelar personagem no ar
+    if humanoid then
+        humanoid.PlatformStand = true
+    end
+
+    -- Lista de posições
     local teleportPoints = {
         Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp2"),
         Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp3"),
@@ -51,14 +61,23 @@ Tab:CreateButton("Instant Finish", function()
         Vector3.new(5732, 1061, 89) -- posição final
     }
 
-    -- Teleportar em sequência
+    -- Executar teleportação
     task.spawn(function()
-        for _, point in ipairs(teleportPoints) do
+        for i, point in ipairs(teleportPoints) do
             local position = typeof(point) == "Instance" and point.Position or point
             humanoidRootPart.CFrame = CFrame.new(position)
             print("Teleportado para:", position)
             task.wait(1)
         end
-        print("Teleportação finalizada.")
+
+        -- Descongelar e encerrar noclip
+        if humanoid then
+            humanoid.PlatformStand = false
+        end
+        if noclipConnection then
+            noclipConnection:Disconnect()
+        end
+
+        print("Teleportação finalizada e personagem descongelado.")
     end)
 end)
