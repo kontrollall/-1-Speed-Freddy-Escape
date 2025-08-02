@@ -1,0 +1,64 @@
+local Library = loadstring(Game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
+local Window = Library:NewWindow("Script")
+ 
+local Tab = Window:NewSection("Credits: TGMANKASKE")
+ 
+Tab:CreateToggle("Inf WalkSpeed", function(no)
+_G.GetWins = no
+while _G.GetWins== true do
+    wait(0.3)
+ 
+local args = {
+	"WalkingSpeedGain",
+	9999999999
+}
+game:GetService("ReplicatedStorage"):WaitForChild("SpeedBoost"):FireServer(unpack(args))
+ 
+end
+end)
+ 
+ 
+Tab:CreateButton("Instant Finish", function()
+    local Players = game:GetService("Players")
+    local Workspace = game:GetService("Workspace")
+    local RunService = game:GetService("RunService")
+
+    local player = Players.LocalPlayer
+    if not player then warn("Jogador local não encontrado!") return end
+
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    -- Ativa noclip
+    RunService.Stepped:Connect(function()
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end)
+
+    -- Lista de posições (patches e coordenadas)
+    local teleportPoints = {
+        Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp2"),
+        Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp3"),
+        Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp4"),
+        Workspace:FindFirstChild("cp5"),
+        Workspace:FindFirstChild("cp6"),
+        Workspace:FindFirstChild("cp7"),
+        Workspace:FindFirstChild("cp8"),
+        Workspace:FindFirstChild("cp9"),
+        Vector3.new(5732, 1061, 89) -- posição final
+    }
+
+    -- Teleportar em sequência
+    task.spawn(function()
+        for _, point in ipairs(teleportPoints) do
+            local position = typeof(point) == "Instance" and point.Position or point
+            humanoidRootPart.CFrame = CFrame.new(position)
+            print("Teleportado para:", position)
+            task.wait(1)
+        end
+        print("Teleportação finalizada.")
+    end)
+end)
