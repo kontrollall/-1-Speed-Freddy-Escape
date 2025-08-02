@@ -18,10 +18,9 @@ end
 end)
  
  
-Tab:CreateButton("Instant Teleport", function()
+Tab:CreateButton("Instant Teleport (with floating platform)", function()
     local Players = game:GetService("Players")
     local Workspace = game:GetService("Workspace")
-    local RunService = game:GetService("RunService")
 
     local player = Players.LocalPlayer
     if not player then
@@ -33,22 +32,23 @@ Tab:CreateButton("Instant Teleport", function()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
     local humanoid = character:FindFirstChildOfClass("Humanoid")
 
-    -- Ativa noclip durante o teleporte
-    local noclipConnection
-    noclipConnection = RunService.Stepped:Connect(function()
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end)
+    -- Cria uma plataforma flutuante temporária
+    local platform = Instance.new("Part")
+    platform.Name = "FloatingPlatform"
+    platform.Size = Vector3.new(10, 1, 10)
+    platform.Anchored = true
+    platform.CanCollide = true
+    platform.Transparency = 1 -- invisível
+    platform.Parent = Workspace
 
-    -- Congelar personagem no ar
-    if humanoid then
-        humanoid.PlatformStand = true
+    -- Posiciona plataforma abaixo do jogador
+    local function positionPlatform()
+        platform.CFrame = CFrame.new(humanoidRootPart.Position - Vector3.new(0, 3, 0))
     end
 
-    -- Lista de posições
+    positionPlatform()
+
+    -- Lista de pontos de teleporte
     local teleportPoints = {
         Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp2"),
         Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp3"),
@@ -58,26 +58,21 @@ Tab:CreateButton("Instant Teleport", function()
         Workspace:FindFirstChild("cp7"),
         Workspace:FindFirstChild("cp8"),
         Workspace:FindFirstChild("cp9"),
-        Vector3.new(5732, 1061, 89) -- posição final
+        Vector3.new(5732, 1061, 89) -- última posição
     }
 
-    -- Executar teleportação
+    -- Executa o teleporte com delay e reposiciona a plataforma
     task.spawn(function()
-        for i, point in ipairs(teleportPoints) do
-            local position = typeof(point) == "Instance" and point.Position or point
-            humanoidRootPart.CFrame = CFrame.new(position)
-            print("Teleportado para:", position)
+        for _, point in ipairs(teleportPoints) do
+            local targetPos = typeof(point) == "Instance" and point.Position or point
+            humanoidRootPart.CFrame = CFrame.new(targetPos)
+            positionPlatform() -- move plataforma com o jogador
+            print("Teleportado para:", targetPos)
             task.wait(1)
         end
 
-        -- Descongelar e encerrar noclip
-        if humanoid then
-            humanoid.PlatformStand = false
-        end
-        if noclipConnection then
-            noclipConnection:Disconnect()
-        end
-
-        print("Teleportação finalizada e personagem descongelado.")
+        -- Remove a plataforma ao fim
+        platform:Destroy()
+        print("Teleportação concluída. Plataforma removida.")
     end)
 end)
