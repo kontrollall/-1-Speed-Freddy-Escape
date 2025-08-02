@@ -1,0 +1,78 @@
+local Library = loadstring(Game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
+local Window = Library:NewWindow("Script")
+ 
+local Tab = Window:NewSection("Credits: TGMANKASKE")
+ 
+Tab:CreateToggle("Inf WalkSpeed", function(no)
+_G.GetWins = no
+while _G.GetWins== true do
+    wait(0.3)
+ 
+local args = {
+	"WalkingSpeedGain",
+	9999999999
+}
+game:GetService("ReplicatedStorage"):WaitForChild("SpeedBoost"):FireServer(unpack(args))
+ 
+end
+end)
+ 
+ 
+Tab:CreateButton("Instant Teleport (with floating platform)", function()
+    local Players = game:GetService("Players")
+    local Workspace = game:GetService("Workspace")
+
+    local player = Players.LocalPlayer
+    if not player then
+        warn("Jogador local não encontrado!")
+        return
+    end
+
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+    -- Cria uma plataforma flutuante temporária
+    local platform = Instance.new("Part")
+    platform.Name = "FloatingPlatform"
+    platform.Size = Vector3.new(10, 1, 10)
+    platform.Anchored = true
+    platform.CanCollide = true
+    platform.Transparency = 1 -- invisível
+    platform.Parent = Workspace
+
+    -- Posiciona plataforma abaixo do jogador
+    local function positionPlatform()
+        platform.CFrame = CFrame.new(humanoidRootPart.Position - Vector3.new(0, 3, 0))
+    end
+
+    positionPlatform()
+
+    -- Lista de pontos de teleporte
+    local teleportPoints = {
+        Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp2"),
+        Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp3"),
+        Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("cp4"),
+        Workspace:FindFirstChild("cp5"),
+        Workspace:FindFirstChild("cp6"),
+        Workspace:FindFirstChild("cp7"),
+        Workspace:FindFirstChild("cp8"),
+        Workspace:FindFirstChild("cp9"),
+        Vector3.new(5732, 1061, 89) -- última posição
+    }
+
+    -- Executa o teleporte com delay e reposiciona a plataforma
+    task.spawn(function()
+        for _, point in ipairs(teleportPoints) do
+            local targetPos = typeof(point) == "Instance" and point.Position or point
+            humanoidRootPart.CFrame = CFrame.new(targetPos)
+            positionPlatform() -- move plataforma com o jogador
+            print("Teleportado para:", targetPos)
+            task.wait(1)
+        end
+
+        -- Remove a plataforma ao fim
+        platform:Destroy()
+        print("Teleportação concluída. Plataforma removida.")
+    end)
+end)
